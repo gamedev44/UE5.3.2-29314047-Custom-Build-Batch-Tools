@@ -1,77 +1,116 @@
 @echo off
-
-rem ## Unreal Engine code build script
-rem ## Copyright Epic Games, Inc. All Rights Reserved.
-rem ##
-rem ## This script is expecting to exist in the /Engine/Build/BatchFiles directory.  It will not work correctly
-rem ## if you copy it to a different location and run it.
-rem ##
-rem ##     %1 is the game name
-rem ##     %2 is the platform name
-rem ##     %3 is the configuration name
-rem ##     additional args are passed directly to UnrealBuildTool
-
 setlocal enabledelayedexpansion
 
-rem ## First, make sure the batch file exists in the folder we expect it to.  This is necessary in order to
-rem ## verify that our relative path to the /Engine/Source directory is correct
-if not exist "%~dp0..\..\Source" goto Error_BatchFileInWrongLocation
+rem This is a build script for Unreal Engine 5.3.2 projects.
+rem It automates the build process for a specified game, platform, and configuration.
+rem Created by P.G.D.
 
-rem ## Change the CWD to /Engine/Source.  We always need to run UnrealBuildTool from /Engine/Source!
+:MainMenu
+cls
+echo Unreal Engine 5.3.2 Build Script
+echo 1. Enter Game Name manually
+echo 2. Select Game Name using File Explorer
+echo 3. Enter Platform Name
+echo 4. Enter Configuration Name
+echo 5. Start Build
+echo 6. Exit
+echo.
+set /P UserChoice="Enter your choice (1-6): "
+
+if "%UserChoice%"=="1" goto EnterGameName
+if "%UserChoice%"=="2" goto SelectGameName
+if "%UserChoice%"=="3" goto EnterPlatformName
+if "%UserChoice%"=="4" goto EnterConfigName
+if "%UserChoice%"=="5" goto StartBuild
+if "%UserChoice%"=="6" goto ExitScript
+goto MainMenu
+
+:EnterGameName
+set /P GameName="Enter Game Name: "
+goto MainMenu
+
+:SelectGameName
+for /f "delims=" %%x in ('powershell -Command "Add-Type -AssemblyName System.Windows.Forms; $f=New-Object System.Windows.Forms.OpenFileDialog; $f.InitialDirectory=[System.IO.Path]::GetFullPath(\".\"); $f.Filter=\"All files (*.*)|*.*\"; $f.ShowDialog() | Out-Null; $f.FileName"') do set GameName=%%x
+goto MainMenu
+
+:EnterPlatformName
+set /P PlatformName="Enter Platform Name: "
+if "%PlatformName%"=="" set PlatformName=DefaultPlatform
+goto MainMenu
+
+:EnterConfigName
+set /P ConfigName="Enter Configuration Name: "
+if "%ConfigName%"=="" set ConfigName=DefaultConfig
+goto MainMenu
+
+:StartBuild
+call :BuildProcess
+goto MainMenu
+
+:ExitScript
+exit /b
+
+:BuildProcess
+if not exist "%~dp0..\..\Source" goto Error_Location
 pushd "%~dp0\..\..\Source"
-if not exist ..\Build\BatchFiles\Build.bat goto Error_BatchFileInWrongLocation
+if not exist ..\Build\BatchFiles\Build.bat goto Error_Location
 
 set UBTPath="..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll"
 
-rem ## Verify that dotnet is present
 call "%~dp0GetDotnetPath.bat"
-if errorlevel 1 goto Error_NoDotnetSDK
-REM ## Skip msbuild detection if using dotnet as this is done for us by dotnet-cli
+if errorlevel 1 goto Error_Dotnet
 
-rem ## If this is an installed build, we don't need to rebuild UBT. Go straight to building.
 if exist ..\Build\InstalledBuild.txt goto ReadyToBuild
 
-rem ## Compile UBT if the project file exists
 :ReadyToBuildUBT
 set ProjectFile="Programs\UnrealBuildTool\UnrealBuildTool.csproj"
 if not exist %ProjectFile% goto NoProjectFile
 
-rem ## Only build if UnrealBuildTool.dll is missing, as Visual Studio or GenerateProjectFiles should be building UnrealBuildTool
-rem ## Note: It is possible UnrealBuildTool will be out of date if the solution was generated with -NoDotNet or is VS2019
-rem ##       Historically this batch file did not compile UnrealBuildTool
 if not exist %UBTPath% (
-	rem ## If this script was called from Visual Studio 2022, build UBT with Visual Studio to prevent unnecessary rebuilds.
-	if "%VisualStudioVersion%" GEQ "17.0" (
-		echo Building UnrealBuildTool with %VisualStudioEdition%...
-		"%VSAPPIDDIR%..\..\MSBuild\Current\Bin\MSBuild.exe" %ProjectFile% -t:Build -p:Configuration=Development -verbosity:quiet -noLogo
-		if errorlevel 1 goto Error_UBTCompileFailed
-	) else (
-		echo Building UnrealBuildTool with dotnet...
-		dotnet build %ProjectFile% -c Development -v quiet
-		if errorlevel 1 goto Error_UBTCompileFailed
-	)
+    if "%VisualStudioVersion%" GEQ "17.0" (
+        echo Building UnrealBuildTool with %VisualStudioEdition%...
+        "%VSAPPIDDIR%..\..\MSBuild\Current\Bin\MSBuild.exe" %ProjectFile% -t:Build -p:Configuration=Development -verbosity:quiet -noLogo
+        if errorlevel 1 goto Error_UBTCompile
+    ) else (
+        echo Building UnrealBuildTool with dotnet...
+        dotnet build %ProjectFile% -c Development -v quiet
+        if errorlevel 1 goto Error_UBTCompile
+    )
 )
-:NoProjectFile
 
-rem ## Run UBT
 :ReadyToBuild
 if not exist %UBTPath% goto Error_UBTMissing
-echo Running UnrealBuildTool: dotnet %UBTPath% %*
-dotnet %UBTPath% %*
-EXIT /B !ERRORLEVEL!
+echo Running UnrealBuildTool: dotnet %UBTPath% %GameName% %PlatformName% %ConfigName%
+dotnet %UBTPath% %GameName% %PlatformName% %ConfigName%
+goto EndScript
 
-:Error_BatchFileInWrongLocation
-echo ERROR: The batch file does not appear to be located in the Engine/Build/BatchFiles directory. This script must be run from within that directory.
-EXIT /B 999
+:Error_Location
+call :LogError "ERROR: Batch file in wrong location."
+goto EndScript
 
-:Error_NoDotnetSDK
-echo ERROR: Unable to find an install of Dotnet SDK.  Please make sure you have it installed and that `dotnet` is a globally available command.
-EXIT /B 999
+:Error_Dotnet
+call :LogError "ERROR: Dotnet SDK not found."
+goto EndScript
 
-:Error_UBTCompileFailed
-echo ERROR: Failed to build UnrealBuildTool.
-EXIT /B 999
+:Error_UBTCompile
+call :LogError "ERROR: Failed to build UnrealBuildTool."
+goto EndScript
 
 :Error_UBTMissing
-echo ERROR: UnrealBuildTool.dll not found in %UBTPath%
-EXIT /B 999
+call :LogError "ERROR: UnrealBuildTool.dll not found."
+goto EndScript
+
+:NoProjectFile
+call :LogError "ERROR: UnrealBuildTool project file missing."
+goto EndScript
+
+:LogError
+set "ErrorMsg=%~1"
+if not exist "%~dp0..\..\Error Logs" mkdir "%~dp0..\..\Error Logs"
+echo %ErrorMsg% >> "%~dp0..\..\Error Logs\Logfile.txt"
+echo %ErrorMsg%
+goto :eof
+
+:EndScript
+popd
+goto MainMenu
