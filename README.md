@@ -4,13 +4,14 @@ This repository, curated and created by P.G.D., contains a collection of enhance
 
 ## Features
 
-### General Enhancements Across Scripts
-
-- **Menu-Based User Interaction**: Provides a user-friendly interface with easy navigation and execution of tasks.
-- **Error Logging**: Errors encountered are logged into a "Logfile.txt" within an "Error Logs" folder for each script, aiding in troubleshooting and debugging.
-- **Windows File Explorer Integration**: Allows graphical file selection for certain operations, enhancing the user experience.
-
 ### Script-Specific Enhancements
+
+#### Module Rebuilder
+
+- **Script Name**: `ModuleRebuilder.bat`
+- **Features**:
+  - Batch script for rebuilding Unreal Engine modules.
+  - Provides an automated solution for module rebuilding tasks.
 
 #### Build Script for Unreal Engine 5.3.2
 
@@ -49,6 +50,43 @@ This repository, curated and created by P.G.D., contains a collection of enhance
 - **Features**:
   - Enhanced for better script execution with added error handling and logging.
   - Modified to support various command-line arguments and user inputs.
+  - Useful for automating Unreal Automation Tool tasks.
+
+#### Clean Script
+
+- **Script Name**: `Clean.bat`
+- **Features**:
+  - Streamlined process for cleaning up Unreal Engine project builds.
+  - Automated error detection and logging.
+
+#### RunUAT Command Script
+
+- **Script Name**: `RunUAT.command`
+- **Features**:
+  - Enhanced for better script execution with added error handling and logging.
+  - Modified to support various command-line arguments and user inputs.
+  - Useful for automating Unreal Automation Tool tasks.
+
+#### GetDotnetPath Script
+
+- **Script Name**: `GetDotnetPath.bat`
+- **Features**:
+  - Batch script for retrieving the path to the Dotnet SDK.
+  - Useful for ensuring Dotnet is correctly configured.
+
+#### GetMSBuildPath Script
+
+- **Script Name**: `GetMSBuildPath.bat`
+- **Features**:
+  - Batch script for retrieving the path to MSBuild.
+  - Helps ensure that MSBuild is properly configured for your Unreal Engine development.
+
+#### Make and Install SSH Key Script
+
+- **Script Name**: `MakeAndInstallSSHKey.bat`
+- **Features**:
+  - Batch script to create and install SSH keys, typically used for version control systems like Git.
+  - Enhances the development environment setup.
 
 ## Usage
 
@@ -68,4 +106,4 @@ For the full license text, see [LICENSE](LICENSE).
 
 ## Acknowledgements
 
- P.G.D. is responsible the creation and maintenance of these scripts, contributing to the Unreal Engine development community.
+P.G.D. is responsible for the creation and maintenance of these scripts, contributing to the Unreal Engine development community.
