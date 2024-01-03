@@ -1,13 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
-rem This is a build script for Unreal Engine 5.3.2 projects.
-rem It automates the build process for a specified game, platform, and configuration.
-rem Created by P.G.D.
-
 :MainMenu
 cls
-echo Unreal Engine 5.3.2 Build Script
+echo Unreal Engine 5.3.2 Build Script Overhaul by P.G.D
 echo 1. Enter Game Name manually
 echo 2. Select Game Name using File Explorer
 echo 3. Enter Platform Name
