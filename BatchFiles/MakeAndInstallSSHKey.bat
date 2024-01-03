@@ -34,6 +34,7 @@ echo.
 pause
 
 %SSH% -p %SSHPORT% "%USER%@%MACHINE%" "if [[ ! -e .ssh ]]; then mkdir .ssh; fi && cd .ssh && if [[ -e authorized_keys ]]; then cp -f authorized_keys authorized_keys_UEBackup; fi && ssh-keygen -t rsa -m PEM -f RemoteToolChain && mv -f RemoteToolChain.pub RemoteToolChainPublic.key && mv -f RemoteToolChain RemoteToolChainPrivate.key && cat RemoteToolChainPublic.key >> authorized_keys";
+if %ERRORLEVEL% neq 0 call :LogError "SSH key generation failed on %MACHINE%."
 
 echo.
 echo ================================================================================
@@ -53,6 +54,7 @@ rmdir "%KEY_DIR%" /s/q
 mkdir "%KEY_DIR%" 2> NUL
 pushd %SSHDIR%
 %RSYNC% -az -e '%SSH% -p %SSHPORT%' "%USER%@%MACHINE%":.ssh/RemoteToolChainPrivate.key "%CYGWIN_KEY_PATH%"
+if %ERRORLEVEL% neq 0 call :LogError "Failed to download private key from %MACHINE%."
 popd
 
 echo.
@@ -62,3 +64,11 @@ echo ===========================================================================
 echo.
 
 pause
+goto :eof
+
+:LogError
+set "ErrorMsg=%~1"
+if not exist "Error Logs" mkdir "Error Logs"
+echo %ErrorMsg% >> "Error Logs\Logfile.txt"
+echo %ErrorMsg%
+goto :eof
